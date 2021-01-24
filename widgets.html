@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Simple HTML Widgets</title>
+    <meta charset="UTF-8">
+    <style>
+      html {
+        font-family: "Times New Roman";
+        font-size: 16px;
+      }
+      
+      main form fieldset {
+        display: inline-block;
+        max-width: 22rem;
+        height: 12.25rem;   
+        border: 1px solid black;
+        vertical-align: top;
+      }
+      
+      main form fieldset legend {
+        padding: 0rem 0.5rem;
+      }
+      
+      main form fieldset label {
+        display: block;
+        padding: 0.5rem 0rem; 
+      }
+      
+      main form fieldset label span {
+        display: inline-block;
+        width: 7rem;
+      }
+      
+      main form fieldset label span::after {
+        content: ":";
+      }
+      
+      main form fieldset input[type=text] {
+        border: 1px solid grey;
+      }
+      
+      main.view form fieldset input[type=text] {
+        border-color: transparent;
+        background-color: transparent;
+      }
+      
+      main form button {
+        display: inline-block;
+        margin: 1.0rem 0.5rem 1.0rem 0rem;
+        padding: 0.25em 1.0rem;
+        background-color: RoyalBlue;
+        color: white;
+        font-weight: bold;
+      }
+      
+      main form button[disabled] {
+        background-color: LightBlue;
+        color: black;
+        font-weight: normal;
+      }
+      
+      footer {
+        padding-top: 1.0rem;
+      }
+    </style>
+    
+    <script language="javascript">
+      (function() {
+        var mainElement;
+        var formElement;
+        var fieldElements;
+        var editSaveBtnElement;
+        var cancelBtnElement;
+      
+        window.addEventListener(
+          "load",
+          function() {
+            // main element that wraps body content
+            mainElement = document.querySelector("main");
+          
+            // form element that wraps fields
+            formElement = document.querySelector("main form");
+          
+            // input fields that need to (dis/en)abled when edit/save is clicked
+            fieldElements = document.querySelectorAll("main input");
+          
+            // edit/save and cancel buttons
+            editSaveBtnElement = document.getElementById("editSaveBtn");
+            cancelBtnElement = document.getElementById("cancelBtn");
+          
+            // transition from view to edit state, or vice-versa
+            viewEditTransition = function() {
+              viewMode = mainElement.classList.contains("view");
+              
+              if (viewMode) {
+                mainElement.classList.remove("view");
+                editSaveBtnElement.innerText = "Save";
+              } else {
+                mainElement.classList.add("view");
+                editSaveBtnElement.innerText = "Edit";
+              }
+          
+              disabled = !viewMode;
+              for (i = 0; i < fieldElements.length; i++) {
+                fieldElements[i].disabled = disabled;
+              
+                if (disabled) {
+                  fieldElements[i].defaultValue = fieldElements[i].value;
+                }
+              }
+              
+              cancelBtnElement.disabled = disabled;
+            };
+          
+            // edit/save click handler
+            editSaveBtnElement.addEventListener("click", function(e) {
+              // Stop event firing twice in succession
+              e.preventDefault();
+              
+              viewEditTransition();
+            });
+          
+            // cancel click handler
+            cancelBtn.addEventListener("click", function(e) {
+              // Stop event firing twice in succession
+              e.preventDefault();
+            
+              // Do a form reset
+              formElement.reset();
+              
+              // Transition - if this button is enabled, it must be from edit to view
+              viewEditTransition();
+            });
+          }
+        );
+      })();
+    </script>
+  </head>
+  <body>
+    <header>
+      <h1>Simple HTML Widgets</h1>
+    </header>
+    
+    <main class="view">
+      <form action="" method="post" autocomplete="on">
+        <fieldset>
+          <legend>Customer</legend>
+          <label>
+            <span>First Name</span>
+            <input name="firstName" type="text" size="32" maxlength="32" disabled>
+          </label>
+          <label>
+            <span>Middle Name</span>
+            <input name="middleName" type="text" size="32" maxlength="32" disabled>
+          </label>
+          <label>
+            <span>Last Name</span>
+            <input name="lastName" type="text" size="32" maxlength="32" disabled>
+          </label>
+        </fieldset>
+          
+        <fieldset>
+          <legend>Address</legend>
+          <label>
+            <span>Line</span>
+            <input name="line" type="text" size="32" maxlength="32" disabled>
+          </label>
+          <label>
+            <span>City</span>
+            <input name="city" type="text" size="32" maxlength="32" disabled>
+          </label>
+          <label>
+            <span>Country</span>
+            <input name="country" type="text" size="32" maxlength="32" disabled>
+          </label>
+          <label>
+            <span>Province</span>
+            <input name="province" type="text" size="32" maxlength="32" disabled>
+          </label>
+          <label>
+            <span>Postal Code</span>
+            <input name="mailCode" type="text" size="32" maxlength="10" disabled>
+          </label>
+        </fieldset>
+        
+        <div class="buttons">
+          <button id="editSaveBtn">Edit</button>
+          <button id="cancelBtn" disabled>Cancel</button>
+        </div>
+      </form>
+    </main>
+    
+    <footer>
+      <a href="">Privacy Policy</a>
+    </footer>
+  </body>
+</html>
