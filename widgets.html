@@ -5,9 +5,19 @@
     <title>Simple HTML Widgets</title>
     <meta charset="UTF-8">
     <style>
+      /* General styles */
+      
       html {
         font-family: "Times New Roman";
         font-size: 16px;
+      }
+      
+      /*
+       Input elements auto width fills space, select elements do not
+       Initially hide form, show it after js sets select widths
+      */
+      main {
+        visibility: hidden;
       }
       
       main form fieldset {
@@ -24,7 +34,8 @@
       
       main form fieldset label {
         display: block;
-        padding: 0.5rem 0rem; 
+        padding: 0.5rem 0rem;
+        text-align: right; 
       }
       
       main form fieldset label span {
@@ -40,9 +51,8 @@
         border: 1px solid grey;
       }
       
-      main.view form fieldset input[type=text] {
-        border-color: transparent;
-        background-color: transparent;
+      main form fieldset select option:first-child {
+        display: none;
       }
       
       main form button {
@@ -54,21 +64,50 @@
         font-weight: bold;
       }
       
+      footer {
+        padding-top: 1.0rem;
+      }
+      
+      /* View styles */
+      
+      main form fieldset input[type=text][disabled] {
+        border-color: transparent;
+        background-color: transparent;
+        color: black;
+      }
+      
+      main form fieldset select[disabled] {
+        border-color: transparent;
+        background-color: transparent;
+        color: black;
+        opacity: 1.0;
+        
+        /* Remove arrow pointing down */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+      } 
+      
+      /* IE 11 remove arrow pointing down */
+      main form fieldset select[disabled]::ms-expand {
+        display: none;
+      }
+      
+      /* Select element that is disabled and selected option is first option with text "Choose ..." */ 
+      main form fieldset select[disabled].view {
+        color: transparent;
+      }
+      
       main form button[disabled] {
         background-color: LightBlue;
         color: black;
         font-weight: normal;
-      }
-      
-      footer {
-        padding-top: 1.0rem;
       }
     </style>
     
     <script language="javascript">
       (function() {
         var mainElement;
-        var formElement;
         var fieldElements;
         var editSaveBtnElement;
         var cancelBtnElement;
@@ -79,18 +118,29 @@
             // main element that wraps body content
             mainElement = document.querySelector("main");
           
-            // form element that wraps fields
-            formElement = document.querySelector("main form");
-          
-            // input fields that need to (dis/en)abled when edit/save is clicked
-            fieldElements = document.querySelectorAll("main input");
+            // form fields
+            fieldElements = document.querySelectorAll("main form fieldset input, main form fieldset select");
           
             // edit/save and cancel buttons
             editSaveBtnElement = document.getElementById("editSaveBtn");
             cancelBtnElement = document.getElementById("cancelBtn");
+            
+            // Input elements auto width fills space, but select elements do not
+            // Manually set all select element widths to match the input elements
+            inputWidth = "" + document.querySelector("main form fieldset input").offsetWidth + "px";
+            for (i = 0; i < fieldElements.length; i++) {
+              field = fieldElements[i];
+              if (field.selectedIndex >= 0) {
+                field.style.width = inputWidth;
+              }
+            }
+            
+            // Show main element now that widths are set
+            mainElement.style.visibility = "visible";
           
             // transition from view to edit state, or vice-versa
             viewEditTransition = function() {
+              // viewMode is true if we are currently in view mode
               viewMode = mainElement.classList.contains("view");
               
               if (viewMode) {
@@ -101,16 +151,44 @@
                 editSaveBtnElement.innerText = "Edit";
               }
           
-              disabled = !viewMode;
-              for (i = 0; i < fieldElements.length; i++) {
-                fieldElements[i].disabled = disabled;
+              // disableElements is true if we are currently in edit mode, since transition will be to view mode
+              disableElements = !viewMode;
               
-                if (disabled) {
-                  fieldElements[i].defaultValue = fieldElements[i].value;
+              for (i = 0; i < fieldElements.length; i++) {
+                field = fieldElements[i];
+                field.disabled = disableElements;
+                
+                if (field.selectedIndex >= 0) {
+                  /*
+                    A select element.
+                    If we're disabling:
+                    - backup the selectedIndex in case of a future form reset.
+                    - if selectedIndex = 0, and option 0 has value == "", add view class to select element
+                    
+                    If we're enabling:
+                    remove view class from select element
+                  */
+                  if (disableElements) {
+                    field.defaultValue = field.selectedIndex;
+                    
+                    if ((field.selectedIndex == 0) && (field.options[0].value == "")) {
+                      field.classList.add("view");
+                    }
+                  } else {
+                    field.classList.remove("view");
+                  }
+                } else {
+                  /*
+                    An input element.
+                    If we're disabling, backup the value in case of a future form reset.
+                  */
+                  if (disableElements) {
+                    field.defaultValue = field.value;
+                  }
                 }
               }
               
-              cancelBtnElement.disabled = disabled;
+              cancelBtnElement.disabled = disableElements;
             };
           
             // edit/save click handler
@@ -126,8 +204,17 @@
               // Stop event firing twice in succession
               e.preventDefault();
             
-              // Do a form reset
-              formElement.reset();
+              // Do a form reset manually
+              // Input elements reset the way we want with form.reset(), but select elements do not
+              for (i = 0; i < fieldElements.length; i++) {
+                field = fieldElements[i];
+                
+                if (field.selectedIndex >= 0) {
+                  field.selectedIndex = field.defaultValue;
+                } else {
+                  field.value = field.defaultValue;
+                }
+              }
               
               // Transition - if this button is enabled, it must be from edit to view
               viewEditTransition();
@@ -172,7 +259,15 @@
           </label>
           <label>
             <span>Country</span>
-            <input name="country" type="text" size="32" maxlength="32" disabled>
+            <select name="country" class="view" disabled>
+              <!--
+                It's important for first option to have a value attribute.
+                Otherwise, the select.value = text instead (Choose a Country).
+              --> 
+              <option value="">Choose a Country</option>
+              <option value="CAN">Canada</option>
+              <option value="USA">United States</option>
+            </select>
           </label>
           <label>
             <span>Province</span>
